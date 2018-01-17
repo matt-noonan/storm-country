@@ -14,6 +14,7 @@ import Site.CV
 import Happstack.Lite
 import Control.Monad
 import Control.Concurrent.MVar
+import System.Process
 
 import Happstack.Server       (redirect, result)
 import Data.Text              (Text)
@@ -63,9 +64,8 @@ site config =
          , dir "me" (me config)
          -- Administration
          , dir "refresh-blog" (refreshBlogPage config)
-         , dir "pull-blog"    (pullBlog config)
          , dir "refresh-cv"   (refreshResumePage config)
-         , dir "pull-cv"      (pullResume config)
+         , dir "pull"         (pull config)
          ] `mappend` homePage config
       
 -- | Serve the home page.
@@ -102,3 +102,9 @@ blogPage entry config = do
     Nothing   -> notFound (toResponse ("No such blog entry!" :: Text))
     Just body -> access body >>= (ok . subpage Blog)
 
+pull :: Config -> ServerPart Response
+pull config = do
+  git <- liftIO $ readProcess "git" [ "--git-dir=" ++ siteRoot config ++ "/.git"
+                                    , "--work-tree=" ++ siteRoot config
+                                    , "pull" ] ""
+  ok $ toResponse $ HTML (pre_ [] (toHtml git))
