@@ -35,9 +35,11 @@ runSite root = do
                       , resumeCache = cv
                       , siteRoot    = root
                       }
+      serverConfig = Just defaultServerConfig { port = 8119 }
+
   refreshBlog   config
 
-  serve Nothing (site config)
+  serve serverConfig (site config)
 
 -- | Invalidate the blog cache.
 refreshBlogPage :: Config -> ServerPart Response
