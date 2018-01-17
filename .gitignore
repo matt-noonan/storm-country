@@ -7,6 +7,7 @@ cabal-dev
 *.chs.h
 *.dyn_o
 *.dyn_hi
+pyg.css
 .hpc
 .hsenv
 .cabal-sandbox/
@@ -19,3 +20,5 @@ cabal.sandbox.config
 cabal.project.local
 .HTF/
 *~
+#*
+.#*
