@@ -35,11 +35,9 @@ runSite root = do
                       , resumeCache = cv
                       , siteRoot    = root
                       }
-      serverConfig = Just defaultServerConfig { port = 8119 }
-
   refreshBlog   config
 
-  serve serverConfig (site config)
+  serve Nothing (site config)
 
 -- | Invalidate the blog cache.
 refreshBlogPage :: Config -> ServerPart Response
@@ -56,12 +54,10 @@ refreshResumePage config = do
 -- | Route requests to the correct handler, or default to home.
 site :: Config -> ServerPart Response
 site config =
-    msum [ dir (subpageRoute Home)  (homePage config)
-         , dir (subpageRoute CV)    (cvPage   config)
-         , dir (subpageRoute Blog)  (path $ \entry -> blogPage entry config)
-         , dir (subpageRoute Blog)  (blogIndexPage config)
-         , dir (subpageRoute Music) (musicPage config)
-         , dir (subpageRoute FractalStream) (fsPage config)
+    msum [ dir "home"  (homePage config)
+         , dir "cv"    (cvPage   config)
+         , dir "blog"  (path $ \entry -> blogPage entry config)
+         , dir "blog"  (blogIndexPage config)
          -- Image resources
          , dir "me" (me config)
          -- Administration
@@ -81,14 +77,6 @@ cvPage config = access (resumeCache config) >>= (ok . subpage CV)
 -- | Serve the single image on this site, for now.
 me :: Config -> ServerPart Response
 me config = serveFile (asContentType "image/jpeg") (siteRoot config ++ "/images/banjo.jpg")
-
--- | Redirect to the music page.
-musicPage :: Config -> ServerPart Response
-musicPage _ = return (redirect 303 ("http://westhillbillies.storm-country.com" :: Text) (result 200 ""))
-
--- | Redirect to the FractalStream project page.
-fsPage :: Config -> ServerPart Response
-fsPage _ = return (redirect 303 ("https://github.com/matt-noonan/fractalstream-1.0" :: Text) (result 200 ""))
 
 -- | Serve the blog index.
 blogIndexPage :: Config -> ServerPart Response
