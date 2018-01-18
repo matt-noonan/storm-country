@@ -3,6 +3,7 @@
 module Util.HTML
   ( HTML(..)
   , emptyTag
+  , asText
 
   , module Lucid
   , makeAttribute
@@ -10,6 +11,8 @@ module Util.HTML
   ) where
 
 import Happstack.Lite (ToMessage(..))
+import Data.Text.Lazy (toStrict)
+import Data.Text      (Text)
 import Lucid
 import Lucid.Base (makeAttribute)
 import Text.Blaze.Html.Renderer.Text (renderHtml)
@@ -28,3 +31,5 @@ instance ToMessage HTML where
 instance IsString HTML where
   fromString = HTML . fromString
 
+asText :: HTML -> Text
+asText (HTML body) = toStrict (renderText body)

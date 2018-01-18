@@ -19,6 +19,8 @@ library
                      , Util.Reloadable
                      
                      , Site.Server
+                     , Site.Static
+                     
                      , Site.Subpage
                      , Site.Home
                      , Site.Blog
@@ -47,6 +49,7 @@ library
                      , containers
                      , aeson
                      , yaml
+                     , filepath
 
 executable storm-country
   hs-source-dirs:      app

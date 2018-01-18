@@ -4,7 +4,7 @@
 module Site.Subpage
        ( Subpage(..)
        , subpages
-       , subpageRoute
+       , subpageLink
        , subpage
        ) where
 
@@ -37,14 +37,14 @@ data Subpage
 subpages :: [Subpage]
 subpages = [minBound .. maxBound]
 
--- | The primary route corresponding to each subpage.
-subpageRoute :: IsString str => Subpage -> str
-subpageRoute = \case
-  Home     -> "home"
-  Blog     -> "blog"
-  Music    -> "music"
-  CV       -> "cv"
-  FractalStream -> "fractalstream"
+-- | The primary link corresponding to each subpage.
+subpageLink :: IsString str => Subpage -> str
+subpageLink = \case
+  Home     -> "/home"
+  Blog     -> "/blog"
+  Music    -> "http://westhillbillies.storm-country.com"
+  CV       -> "/cv"
+  FractalStream -> "https://github.com/matt-noonan/fractalstream-1.0"
   
 -- | Build up a subpage from the contents to render.
 subpage :: Subpage -> HTML -> Response
@@ -58,10 +58,7 @@ subpage sp (HTML body) = pageTemplate (HTML $ toHtml $ show sp) $ HTML $ do
             forM_ subpages $ \p -> do
               let liClass = if p == sp then "nav-item active bolder" else "nav-item"
               li_ [ class_ liClass ] $ do
-                let route = subpageRoute p
-                a_ [ class_ "nav-link"
-                   , href_ ("/" `T.append` route)
-                   ] (toHtml $ show p)
+                a_ [ class_ "nav-link", href_ (subpageLink p) ] (toHtml $ show p)
                     
         nav_ [ class_ "navbar navbar-dark bg-secondary d-block d-md-none" ] $ do
           div_ [ class_ "row" ] $ do
@@ -77,10 +74,7 @@ subpage sp (HTML body) = pageTemplate (HTML $ toHtml $ show sp) $ HTML $ do
               forM_ subpages $ \p -> do
                 let liClass = if p == sp then "nav-item active bolder" else "nav-item"
                 li_ [ class_ liClass ] $ do
-                  let route = subpageRoute p
-                  a_ [ class_ "nav-link"
-                     , href_ ("/" `T.append` route)
-                     ] (toHtml $ show p)
+                  a_ [ class_ "nav-link", href_ (subpageLink p) ] (toHtml $ show p)
                     
       div_ [ class_ "col-md-8 col-lg-7 col-xl-6" ] body
       div_ [ class_ "col-md-1 col-lg-2 col-xl-3" ] emptyTag
