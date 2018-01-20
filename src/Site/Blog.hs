@@ -36,8 +36,9 @@ refreshBlog :: MonadIO m => Config -> m ()
 refreshBlog config = liftIO $ do
   let yaml = siteRoot config ++ "/blog.yaml"
 
-  index <- maybe (error "missing blog index") (sortOn (Down . B.date)) <$> decodeFile yaml
-  let nexts = Nothing : map Just index
+  entries <- maybe (error "missing blog index") id <$> decodeFile yaml
+  let index = filter B.published (sortOn (Down . B.date) entries)
+      nexts = Nothing : map Just index
       prevs = drop 1 (map Just index) ++ [Nothing]
       
   cache <- for (zip3 prevs index nexts) $ \(prev, entry, next) -> do
@@ -54,12 +55,14 @@ refreshBlog config = liftIO $ do
 makeBlogIndex :: [ BlogEntry ] -> HTML
 makeBlogIndex index = HTML $ do
   h2_ ("Index" :: Html ())
-  forM_ index $ \entry -> do
+  forM_ (filter B.published index) $ \entry -> do
     div_ [ class_ "row" ] $ do
       div_ [ class_ "col-md-9" ] $
         a_ [ href_ ("/blog/" `T.append` B.page entry) ] (toHtml $ B.title entry)
       div_ [ class_ "col-md-3 small" ] (toHtml (show $ B.date entry))
-          
+
+  when (null $ filter B.published index) $
+    p_ "There is nothing here yet!"
   
 
 -- | Generate an individual blog page, lazily. The page is created

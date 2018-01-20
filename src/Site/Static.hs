@@ -72,7 +72,9 @@ buildSite root output = do
     T.writeFile (output </> "blog" </> (T.unpack name ++ ".html")) (body $ subpage Blog contents)
 
   -- Set up .htaccess file
-  let blogRoutes = map (\x -> (x, "./blog/" `T.append` x `T.append` ".html")) (M.keys entries)
+  let blogRoutes = map (\x -> ("blog/" `T.append` x,
+                               "./blog/" `T.append` x `T.append` ".html"))
+                       (M.keys entries)
       htaccess = [ "RewriteEngine On" ] ++
         [ "RewriteRule ^" `T.append` x `T.append` "$ " `T.append` y
         | (x,y) <- [ ("home", "./index.html")

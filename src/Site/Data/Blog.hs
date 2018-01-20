@@ -56,6 +56,7 @@ data BlogEntry = BlogEntry
   , source :: FilePath
   , tags   :: [ Text ]
   , date   :: PostDate
+  , published :: Bool
   }
 
 instance FromJSON BlogEntry where
@@ -65,5 +66,6 @@ instance FromJSON BlogEntry where
            <*> o .: "page"
            <*> o .: "source"
            <*> o .: "tags"
-           <*> o .: "date") v
+           <*> o .: "date"
+           <*> o .: "published") v
  
