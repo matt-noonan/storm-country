@@ -11,13 +11,14 @@ module Site.Subpage
 import Happstack.Lite
 
 import Util.HTML
+import Site.Data.Config
 
 import Data.Text (Text)
 import qualified Data.Text as T
 
 import Data.String (IsString(..))
 
-import Control.Monad (forM_)
+import Control.Monad (forM_, when)
 
 import System.IO.Unsafe
 import System.Process
@@ -47,8 +48,8 @@ subpageLink = \case
   FractalStream -> "https://github.com/matt-noonan/fractalstream-1.0"
   
 -- | Build up a subpage from the contents to render.
-subpage :: Subpage -> HTML -> Response
-subpage sp (HTML body) = pageTemplate (HTML $ toHtml $ show sp) $ HTML $ do
+subpage :: Config -> Subpage -> HTML -> Response
+subpage config sp (HTML body) = pageTemplate config (HTML $ toHtml $ show sp) $ HTML $ do
   div_ [ class_ "container-fluid" ] $ do
     div_ [ class_ "row"] $ do
       div_ [ class_ "col-md-3 col-lg-3 col-xl-3" ] $ do
@@ -93,15 +94,16 @@ subpage sp (HTML body) = pageTemplate (HTML $ toHtml $ show sp) $ HTML $ do
           , async_ "" ] emptyTag
 
 -- | Create a page from a title and body, injecting various scripts and styles.
-pageTemplate :: HTML -> HTML -> Response
-pageTemplate (HTML title) (HTML body) = toResponse (HTML thePage)
+pageTemplate :: Config -> HTML -> HTML -> Response
+pageTemplate config (HTML title) (HTML body) = toResponse (HTML thePage)
   where
     thePage :: Html ()
     thePage = html_ $ do 
       head_ $ do
-        script_ [ async_ ""
-                , src_   "https://www.googletagmanager.com/gtag/js?id=UA-96111345-2" ] emptyTag
-        script_ [] (toHtmlRaw ("window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96111345-2');" :: Text))
+        when (useTracker config) $ do
+          script_ [ async_ ""
+                  , src_   "https://www.googletagmanager.com/gtag/js?id=UA-96111345-2" ] emptyTag
+          script_ [] (toHtmlRaw ("window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-96111345-2');" :: Text))
 
         meta_ [ charset_ "utf-8" ]
         meta_ [ name_    "viewport"

@@ -14,5 +14,7 @@ data Config = Config
   { blogCache   :: MVar (Map Text (Reloadable HTML))
   , blogIndex   :: MVar [ BlogEntry ]
   , resumeCache :: Reloadable HTML
-  , siteRoot    :: FilePath }
+  , siteRoot    :: FilePath
+  , useTracker  :: Bool
+  }
 

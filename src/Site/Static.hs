@@ -43,6 +43,7 @@ buildSite root output = do
                       , blogIndex   = index
                       , resumeCache = cv
                       , siteRoot    = root
+                      , useTracker  = True
                       }
   refreshBlog config
   
@@ -55,21 +56,22 @@ buildSite root output = do
                                   (output </> "images" </> takeFileName img)
 
   -- Render the homepage
-  T.writeFile (output </> "index.html") (body $ subpage Home home)
+  T.writeFile (output </> "index.html") (body $ subpage config Home home)
 
   -- Render the CV page
   cvBody <- access cv
-  T.writeFile (output </> "cv.html") (body $ subpage CV cvBody)
+  T.writeFile (output </> "cv.html") (body $ subpage config CV cvBody)
 
   -- Render the blog index page
   index <- makeBlogIndex <$> readMVar (blogIndex config)
-  T.writeFile (output </> "blog" </> "index.html") (body $ subpage Blog index)
+  T.writeFile (output </> "blog" </> "index.html") (body $ subpage config Blog index)
 
   -- Render the individual blog entries
   entries <- readMVar (blogCache config)
   forM_ (M.toList entries) $ \(name, entry) -> do
     contents <- access entry
-    T.writeFile (output </> "blog" </> (T.unpack name ++ ".html")) (body $ subpage Blog contents)
+    T.writeFile (output </> "blog" </> (T.unpack name ++ ".html"))
+                (body $ subpage config Blog contents)
 
   -- Set up .htaccess file
   let blogRoutes = map (\x -> ("blog/" `T.append` x,

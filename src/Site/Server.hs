@@ -34,6 +34,7 @@ runSite root = do
                       , blogIndex   = index
                       , resumeCache = cv
                       , siteRoot    = root
+                      , useTracker  = False
                       }
   refreshBlog   config
 
@@ -68,11 +69,11 @@ site config =
       
 -- | Serve the home page.
 homePage :: Config -> ServerPart Response
-homePage _ = ok $ subpage Home home
+homePage config = ok $ subpage config Home home
       
 -- | Serve the CV page.
 cvPage :: Config -> ServerPart Response
-cvPage config = access (resumeCache config) >>= (ok . subpage CV)
+cvPage config = access (resumeCache config) >>= (ok . subpage config CV)
 
 -- | Serve the single image on this site, for now.
 me :: Config -> ServerPart Response
@@ -82,7 +83,7 @@ me config = serveFile (asContentType "image/jpeg") (siteRoot config ++ "/images/
 blogIndexPage :: Config -> ServerPart Response
 blogIndexPage config = do
   index <- liftIO $ readMVar (blogIndex config)
-  ok $ subpage Blog (makeBlogIndex index)
+  ok $ subpage config Blog (makeBlogIndex index)
 
 -- | Serve a particular blog entry.
 blogPage :: Text -> Config -> ServerPart Response
@@ -90,7 +91,7 @@ blogPage entry config = do
   cache <- liftIO $ readMVar (blogCache config)
   case M.lookup entry cache of
     Nothing   -> notFound (toResponse ("No such blog entry!" :: Text))
-    Just body -> access body >>= (ok . subpage Blog)
+    Just body -> access body >>= (ok . subpage config Blog)
 
 pull :: Config -> ServerPart Response
 pull config = do

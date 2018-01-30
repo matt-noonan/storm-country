@@ -15,6 +15,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Control.Concurrent.MVar
 import Text.Markdown
+import Text.Markdown.Block
 import System.IO.Unsafe
 import System.Process
 
@@ -77,7 +78,14 @@ blogEntry :: MonadIO m
           
 blogEntry entry root prev next = do
   
-    let mdSettings = def { msBlockCodeRenderer = pygmentize }
+    let mdSettings =
+          def { msBlockCodeRenderer = pygmentize
+              , msFencedHandlers = latexFencedHandler
+                         `M.union` msFencedHandlers def
+              , msXssProtect = False
+              }
+        latexFencedHandler = M.singleton "^^^" $ \_ -> FHRaw $
+          return . BlockCode (Just "latex")
         (mainTitle, subTitle0) = T.breakOn ": " (B.title entry)
         subTitle = if T.null subTitle0 then "" else T.drop 2 subTitle0
         
@@ -121,14 +129,23 @@ blogEntry entry root prev next = do
 pygmentize :: Maybe Text -> (Text, Blaze.Html) -> Blaze.Html
 pygmentize (Just lang) (src, _) = Blaze.preEscapedToHtml $ renderText block
   where
-    block = div_ [ class_ "card code-card bg-light" ] body
+    block = if lang == "latex" || lang == ""
+            then tex'd
+            else div_ [ class_ "card code-card bg-light" ] body
     body = unsafePerformIO (toHtmlRaw <$> pyg)
     pyg = T.pack <$> readProcess "pygmentize" [ "-f", "html"
                                               , "-l", T.unpack lang
                                               , "-O", "style=colorful"
                                               ] (T.unpack src)
+    tex'd = toHtmlRaw ("$$ " `T.append` src `T.append` " $$")
+    
 pygmentize Nothing (src, _) = Blaze.preEscapedToHtml $ renderText block
   where
-    block = div_ [ class_ "card code-card bg-light" ] $ do
-                (pre_ $ code_ $ toHtml src)
+    block = case isTex of
+      Nothing  -> div_ [ class_ "card code-card bg-light" ] $ do
+                    (pre_ $ code_ $ toHtml src)
+      Just tex -> toHtmlRaw ("\\(" `T.append` tex `T.append` "\\)")
 
+    isTex = if T.length src < 2 || T.head src /= '$' || T.last src /= '$'
+            then Nothing
+            else Just (T.init (T.tail src))
