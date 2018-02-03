@@ -15,6 +15,7 @@ import Site.Data.Config
 
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 
 import Data.String (IsString(..))
 
@@ -109,6 +110,10 @@ pageTemplate config (HTML title) (HTML body) = toResponse (HTML thePage)
         meta_ [ name_    "viewport"
               , content_ "width=device-width, initial-scale=1" ]
         title_ title
+        link_ [ rel_   "alternate"
+              , type_  "application/rss+xml"
+              , href_  "http://storm-country.com/rss"
+              , title_ "Storm Country" ]
         link_ [ rel_ "stylesheet"
               , href_ "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css"
               , integrity_ "sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy"
@@ -119,7 +124,7 @@ pageTemplate config (HTML title) (HTML body) = toResponse (HTML thePage)
         style_ ".bolder { font-weight:600; }"
         style_ ".code-card { box-shadow: 0 3px 3px 0 rgba(0,0,0,0.2); margin-top: 20px; margin-bottom: 20px; padding: 15px; padding-bottom: 0px; }"
       body_ body
-
+      
 -- | Grab @pygmentize@'s color scheme as CSS.
 pygstyle :: Text
 pygstyle = unsafePerformIO (T.pack <$> pyg)

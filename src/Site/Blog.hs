@@ -4,6 +4,7 @@ module Site.Blog
        ( blogEntry
        , makeBlogIndex
        , refreshBlog
+       , rss
        ) where
 
 import Site.Data.Config
@@ -38,10 +39,11 @@ refreshBlog config = liftIO $ do
   let yaml = siteRoot config ++ "/blog.yaml"
 
   entries <- maybe (error "missing blog index") id <$> decodeFile yaml
-  let index = filter B.published (sortOn (Down . B.date) entries)
+  let index = articleFilter (sortOn (Down . B.date) entries)
       nexts = Nothing : map Just index
       prevs = drop 1 (map Just index) ++ [Nothing]
-      
+      articleFilter = if useTracker config then filter B.published else id
+        
   cache <- for (zip3 prevs index nexts) $ \(prev, entry, next) -> do
              body <- blogEntry entry (siteRoot config) prev next
              return (B.page entry, body)
@@ -149,3 +151,24 @@ pygmentize Nothing (src, _) = Blaze.preEscapedToHtml $ renderText block
     isTex = if T.length src < 2 || T.head src /= '$' || T.last src /= '$'
             then Nothing
             else Just (T.init (T.tail src))
+
+(<>) = T.append
+
+tag :: Text -> Text -> Text
+tag name contents = "<" <> name <> ">" <> contents <> "</" <> name <> ">"
+
+rss :: [BlogEntry] -> Text
+rss index = header
+         <> T.concat [toRSS post | post <- index
+                                 , published post]
+         <> footer
+  where
+    header = T.concat [ "<?xml version=\"1.0\"?><rss version=\"2.0\">"
+                      , "<channel>"
+                      , "<title>Storm Country</title>"
+                      , "<link>http://storm-country.com/blog</link>"
+                      , "<description>Matt Noonan's blog</description>" ]
+    footer = "</channel></rss>"
+
+    toRSS entry = tag "item" (tag "title" (title entry)
+                           <> tag "link" ("http://storm-country.com/blog/" <> page entry))

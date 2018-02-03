@@ -63,8 +63,9 @@ buildSite root output = do
   T.writeFile (output </> "cv.html") (body $ subpage config CV cvBody)
 
   -- Render the blog index page
-  index <- makeBlogIndex <$> readMVar (blogIndex config)
-  T.writeFile (output </> "blog" </> "index.html") (body $ subpage config Blog index)
+  index <- readMVar (blogIndex config)
+  T.writeFile (output </> "blog" </> "index.html")
+              (body $ subpage config Blog $ makeBlogIndex index)
 
   -- Render the individual blog entries
   entries <- readMVar (blogCache config)
@@ -73,6 +74,9 @@ buildSite root output = do
     T.writeFile (output </> "blog" </> (T.unpack name ++ ".html"))
                 (body $ subpage config Blog contents)
 
+  -- Render the RSS feed
+  T.writeFile (output </> "blog.rss") (rss index)
+  
   -- Set up .htaccess file
   let blogRoutes = map (\x -> ("blog/" `T.append` x,
                                "./blog/" `T.append` x `T.append` ".html"))
@@ -82,6 +86,7 @@ buildSite root output = do
         | (x,y) <- [ ("home", "./index.html")
                    , ("me",   "./images/banjo.jpg")
                    , ("cv",   "./cv.html")
+                   , ("rss",  "./blog.rss")
                    , ("blog", "./blog/index.html") ] ++ blogRoutes ]
 
   T.writeFile (output </> ".htaccess") (T.unlines htaccess)

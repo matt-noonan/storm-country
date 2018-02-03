@@ -16,11 +16,13 @@ import Control.Monad
 import Control.Concurrent.MVar
 import System.Process
 
-import Happstack.Server       (redirect, result)
-import Data.Text              (Text)
-import Control.Monad.IO.Class (liftIO)
+import Happstack.Server        (redirect, result)
+import Data.Text               (Text)
+import Control.Monad.IO.Class  (liftIO)
 
 import qualified Data.Map as M
+import qualified Data.Text.Lazy.Encoding as T
+import qualified Data.Text.Lazy as T
 
 -- | Run the site from the given directory.
 runSite :: FilePath -> IO ()
@@ -59,6 +61,8 @@ site config =
          , dir "cv"    (cvPage   config)
          , dir "blog"  (path $ \entry -> blogPage entry config)
          , dir "blog"  (blogIndexPage config)
+         -- Syndication
+         , dir "rss"   (rssFeed config)
          -- Image resources
          , dir "me" (me config)
          -- Administration
@@ -99,3 +103,10 @@ pull config = do
                                     , "--work-tree=" ++ siteRoot config
                                     , "pull" ] ""
   ok $ toResponse $ HTML (pre_ [] (toHtml git))
+
+-- | Serve the RSS feed
+rssFeed :: Config -> ServerPart Response
+rssFeed config = do
+  index <- liftIO $ readMVar (blogIndex config)
+  let feed = T.encodeUtf8 (T.fromStrict (rss index))
+  ok $ toResponseBS "application/rss+xml" feed
