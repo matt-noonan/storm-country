@@ -8,7 +8,7 @@ module Site.Data.Blog
 import Data.Text (Text)
 import Data.String (IsString(..))
 
-import Data.Aeson (FromJSON(..), withObject, withText, (.:))
+import Data.Aeson (FromJSON(..), withObject, withText, (.:), (.:?), (.!=))
   
 data PostDate = PostDate
   { year  :: Int
@@ -54,6 +54,8 @@ data BlogEntry = BlogEntry
   { title  :: Text
   , page   :: Text
   , source :: FilePath
+  , script :: Maybe FilePath
+  , hidden :: Bool
   , tags   :: [ Text ]
   , date   :: PostDate
   , published :: Bool
@@ -62,10 +64,12 @@ data BlogEntry = BlogEntry
 instance FromJSON BlogEntry where
   parseJSON v = withObject "object"
     (\o -> BlogEntry
-           <$> o .: "title"
-           <*> o .: "page"
-           <*> o .: "source"
-           <*> o .: "tags"
-           <*> o .: "date"
-           <*> o .: "published") v
- 
+           <$> o .:  "title"
+           <*> o .:  "page"
+           <*> o .:  "source"
+           <*> o .:? "script"
+           <*> o .:? "hidden" .!= False
+           <*> o .:  "tags"
+           <*> o .:  "date"
+           <*> o .:  "published") v
+

@@ -51,6 +51,19 @@ subpageLink = \case
 -- | Build up a subpage from the contents to render.
 subpage :: Config -> Subpage -> HTML -> Response
 subpage config sp (HTML body) = pageTemplate config (HTML $ toHtml $ show sp) $ HTML $ do
+  script_ [ src_         "https://code.jquery.com/jquery-3.2.1.slim.min.js"
+          , integrity_   "sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+          , crossorigin_ "anonymous" ] emptyTag
+  script_ [ src_         "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+          , integrity_   "sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+          , crossorigin_ "anonymous" ] emptyTag
+  script_ [ src_         "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js"
+          , integrity_   "sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4"
+          , crossorigin_ "anonymous" ] emptyTag
+  script_ [ type_        "text/javascript"
+          , src_         "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"
+          , async_ "" ] emptyTag
+
   div_ [ class_ "container-fluid" ] $ do
     div_ [ class_ "row"] $ do
       div_ [ class_ "col-md-3 col-lg-3 col-xl-3" ] $ do
@@ -80,19 +93,6 @@ subpage config sp (HTML body) = pageTemplate config (HTML $ toHtml $ show sp) $ 
                     
       div_ [ class_ "col-md-8 col-lg-7 col-xl-6" ] body
       div_ [ class_ "col-md-1 col-lg-2 col-xl-3" ] emptyTag
-
-  script_ [ src_         "https://code.jquery.com/jquery-3.2.1.slim.min.js"
-          , integrity_   "sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-          , crossorigin_ "anonymous" ] emptyTag
-  script_ [ src_         "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-          , integrity_   "sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-          , crossorigin_ "anonymous" ] emptyTag
-  script_ [ src_         "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js"
-          , integrity_   "sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4"
-          , crossorigin_ "anonymous" ] emptyTag
-  script_ [ type_        "text/javascript"
-          , src_         "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML"
-          , async_ "" ] emptyTag
 
 -- | Create a page from a title and body, injecting various scripts and styles.
 pageTemplate :: Config -> HTML -> HTML -> Response

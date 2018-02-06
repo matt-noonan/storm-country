@@ -10,6 +10,7 @@ import Site.Subpage
 import Site.Home
 import Site.Blog
 import Site.CV
+import Site.Data.Blog
 
 import Control.Monad
 import Control.Concurrent.MVar
@@ -21,6 +22,7 @@ import Happstack.Server (Response, rsBody)
 import Data.Text              (Text)
 import Data.Text.Encoding     (decodeUtf8)
 import Control.Monad.IO.Class (liftIO)
+import Data.Yaml              (decodeFile)
 
 import qualified Data.Map     as M
 import qualified Data.Text    as T
@@ -38,7 +40,7 @@ buildSite root output = do
   index <- newEmptyMVar
   cache <- newEmptyMVar
   cv    <- makeCV root
-  
+
   let config = Config { blogCache   = cache
                       , blogIndex   = index
                       , resumeCache = cv
@@ -46,7 +48,7 @@ buildSite root output = do
                       , useTracker  = True
                       }
   refreshBlog config
-  
+
   -- Build the directory structure
   mapM_ (createDirectoryIfMissing True) [ output </> "images"
                                         , output </> "blog" ]
@@ -74,6 +76,18 @@ buildSite root output = do
     T.writeFile (output </> "blog" </> (T.unpack name ++ ".html"))
                 (body $ subpage config Blog contents)
 
+  -- Render any hidden blog entries
+  let yaml = siteRoot config ++ "/blog.yaml"
+  addlEntries <- maybe (error "missing blog index") id <$> decodeFile yaml
+  addlRoutes <- forM (filter hidden addlEntries) $ \entry -> do
+    let name = page entry
+    liftIO (putStrLn $ "additional entry: " ++ T.unpack name)
+    contents <- access =<< blogEntry entry (siteRoot config) Nothing Nothing
+    T.writeFile (output </> "blog" </> (T.unpack name ++ ".html"))
+                (body $ subpage config Blog contents)
+    return ("blog/" `T.append` name,
+            "./blog/" `T.append` name `T.append` ".html")
+
   -- Render the RSS feed
   T.writeFile (output </> "blog.rss") (rss index)
   
@@ -87,6 +101,7 @@ buildSite root output = do
                    , ("me",   "./images/banjo.jpg")
                    , ("cv",   "./cv.html")
                    , ("rss",  "./blog.rss")
-                   , ("blog", "./blog/index.html") ] ++ blogRoutes ]
+                   , ("blog", "./blog/index.html") ]
+                   ++ blogRoutes ++ addlRoutes ]
 
   T.writeFile (output </> ".htaccess") (T.unlines htaccess)

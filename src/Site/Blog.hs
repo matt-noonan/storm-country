@@ -43,7 +43,7 @@ refreshBlog config = liftIO $ do
       nexts = Nothing : map Just index
       prevs = drop 1 (map Just index) ++ [Nothing]
       articleFilter = if useTracker config then filter B.published else id
-        
+  
   cache <- for (zip3 prevs index nexts) $ \(prev, entry, next) -> do
              body <- blogEntry entry (siteRoot config) prev next
              return (B.page entry, body)
@@ -93,6 +93,8 @@ blogEntry entry root prev next = do
         
     onReload $ do
       md <- liftIO $ T.readFile (root ++ "/" ++ B.source entry)
+      js <- sequence $ (liftIO . T.readFile . ((root ++ "/") ++)) <$> B.script entry
+
       return $ HTML $ do
 
         -- Next / prev
@@ -126,6 +128,9 @@ blogEntry entry root prev next = do
 
         -- Body
         toHtmlRaw $ renderHtml $ markdown mdSettings (fromStrict md)
+
+        -- Additional scripts, if any
+        maybe (return ()) script_ js
 
 -- | Use @pygmentize@ to do syntax coloring of code fragments.
 pygmentize :: Maybe Text -> (Text, Blaze.Html) -> Blaze.Html
